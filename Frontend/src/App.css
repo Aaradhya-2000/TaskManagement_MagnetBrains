@@ -827,3 +827,40 @@ h1.text-primary {
   background: #0056b3;
   transform: scale(1.05);
 }
+.task-row {
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s;
+}
+
+.task-row:hover {
+  background-color: #f1f6ff;
+  transform: scale(1.01);
+}
+
+.task-modal .modal-content {
+  border-radius: 15px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8fbff, #e9f2ff);
+}
+
+.task-modal .modal-header {
+  background: linear-gradient(90deg, #007bff, #0056d1);
+}
+
+.task-modal h5 {
+  color: #004085;
+}
+
+.modal-body p {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.badge {
+  font-size: 0.85rem;
+}
+
+button.btn-info,
+button.btn-warning {
+  color: white;
+}

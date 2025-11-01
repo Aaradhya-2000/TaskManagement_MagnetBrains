@@ -9,32 +9,29 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET || "yourStrongSecretKey";
 
 const AdminLogin1 = async (req, res) => {
-  console.log("Connected DB");
-  console.log(req.body);
-
-  const { email, password } = req.body;
-
   try {
+    const { email, password } = req.body;
+    console.log("📩 Login attempt:", email, password);
+
     const admin = await AdminModel.findOne({ email });
+    console.log("👤 Admin found:", admin);
 
     if (!admin) {
-      return res.status(404).json({ message: "❌ Admin not found" });
+      return res.status(404).json({ message: "Admin not found" });
     }
 
-    // 🧂 Compare hashed passwords using bcrypt
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "❌ Invalid password" });
+    // If you stored password in plain text (not hashed)
+    if (admin.password !== password) {
+      return res.status(401).json({ message: "Invalid password" });
     }
 
-    // 🎟 Generate JWT token
+    // Generate JWT
     const token = jwt.sign(
-      { id: admin._id, email: admin.email, role: "admin" },
-      JWT_SECRET,
-      { expiresIn: "1d" } // token valid for 1 day
+      { id: admin._id, email: admin.email },
+      "yourSecretKey",
+      { expiresIn: "1h" }
     );
 
-    // 🎯 Success Response
     return res.status(200).json({
       message: "✅ Login successful",
       token,
@@ -44,10 +41,9 @@ const AdminLogin1 = async (req, res) => {
         email: admin.email,
       },
     });
-
   } catch (error) {
     console.error("Login Error:", error);
-    return res.status(500).json({ message: "⚠️ Server error" });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 

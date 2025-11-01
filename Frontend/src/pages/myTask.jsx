@@ -6,17 +6,18 @@ import Badge from "react-bootstrap/Badge";
 import Spinner from "react-bootstrap/Spinner";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-// import "./MyTask.css"; // we'll add exciting styles here
+import Card from "react-bootstrap/Card";
+// import "./MyTask.css"; // ✨ Add this for styling
 
 const MyTask = () => {
   const uid = localStorage.getItem("uid");
   const [mdata, setMdata] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [updatingId, setUpdatingId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
-  // Load tasks
+  // 🔹 Load all tasks for this user
   const loadData = async () => {
     try {
       setLoading(true);
@@ -33,18 +34,18 @@ const MyTask = () => {
     loadData();
   }, []);
 
-  // Open modal before completion
-  const confirmCompletion = (task) => {
+  // 🔹 Show task details in modal
+  const handleRowClick = (task) => {
     setSelectedTask(task);
-    setShowModal(true);
+    setShowTaskModal(true);
   };
 
-  // Update task status API call
+  // 🔹 Update task status
   const handleStatusChange = async (taskId, currentStatus) => {
     let newStatus;
     if (currentStatus === "Pending") newStatus = "In Progress";
     else if (currentStatus === "In Progress") newStatus = "Completed";
-    else return; // Completed → no change
+    else return;
 
     try {
       setUpdatingId(taskId);
@@ -52,7 +53,7 @@ const MyTask = () => {
         taskStatus: newStatus,
       });
 
-      // Update UI locally
+      // Update locally
       setMdata((prev) =>
         prev.map((task) =>
           task._id === taskId ? { ...task, taskStatus: newStatus } : task
@@ -62,11 +63,10 @@ const MyTask = () => {
       console.error("❌ Error updating status:", err);
     } finally {
       setUpdatingId(null);
-      setShowModal(false);
     }
   };
 
-  // Badge or Button for each status
+  // 🔹 Render task status as button/badge
   const renderStatusButton = (task) => {
     const { taskStatus } = task;
     const isUpdating = updatingId === task._id;
@@ -86,11 +86,10 @@ const MyTask = () => {
         }
         size="sm"
         disabled={isUpdating}
-        onClick={() =>
-          taskStatus === "In Progress"
-            ? confirmCompletion(task)
-            : handleStatusChange(task._id, taskStatus)
-        }
+        onClick={(e) => {
+          e.stopPropagation(); // prevent modal from opening on button click
+          handleStatusChange(task._id, taskStatus);
+        }}
       >
         {isUpdating
           ? "Updating..."
@@ -103,7 +102,7 @@ const MyTask = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="text-center mb-3">🧾 My Tasks</h2>
+      <h2 className="text-center mb-3 text-primary">🧾 My Tasks</h2>
 
       {loading ? (
         <div className="text-center my-5">
@@ -113,12 +112,12 @@ const MyTask = () => {
       ) : mdata.length === 0 ? (
         <h5 className="text-center text-muted">No tasks assigned yet!</h5>
       ) : (
-        <Table striped bordered hover responsive>
-          <thead>
+        <Table striped bordered hover responsive className="shadow-sm">
+          <thead className="table-dark text-center">
             <tr>
               <th>Title</th>
               <th>Description</th>
-              <th>Duration (days)</th>
+              <th>Duration</th>
               <th>Priority</th>
               <th>Status</th>
               <th>Assigned On</th>
@@ -126,10 +125,14 @@ const MyTask = () => {
           </thead>
           <tbody>
             {mdata.map((task) => (
-              <tr key={task._id}>
+              <tr
+                key={task._id}
+                className="task-row"
+                onClick={() => handleRowClick(task)}
+              >
                 <td>{task.title}</td>
                 <td>{task.description}</td>
-                <td>{task.duration}</td>
+                <td>{task.duration} days</td>
                 <td>
                   {task.priority === "High" ? (
                     <Badge bg="danger">High</Badge>
@@ -147,37 +150,34 @@ const MyTask = () => {
         </Table>
       )}
 
-      {/* Confirmation Modal */}
+      {/* 🔹 Task Details Modal */}
       <Modal
-        show={showModal}
-        onHide={() => setShowModal(false)}
+        show={showTaskModal}
+        onHide={() => setShowTaskModal(false)}
         centered
-        className="confirm-modal"
+        size="md"
+        className="task-modal"
       >
-        <div className="modal-glow">
-          <Modal.Header closeButton>
-            <Modal.Title>🎉 Confirm Completion</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p className="modal-text">
-              💪 Are you sure you’ve completed the task <br />
-              <strong>“{selectedTask?.title}”</strong>?
-            </p>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant="success"
-              onClick={() =>
-                handleStatusChange(selectedTask._id, selectedTask.taskStatus)
-              }
-            >
-              ✅ Yes, Complete it!
-            </Button>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>
-              ❌ Cancel
-            </Button>
-          </Modal.Footer>
-        </div>
+        <Modal.Header closeButton className="bg-primary text-white">
+          <Modal.Title>📄 Task Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedTask && (
+            <Card className="border-0 shadow-sm p-3 rounded">
+              <h5 className="mb-3 text-dark fw-bold">{selectedTask.title}</h5>
+              <p><strong>Description:</strong> {selectedTask.description}</p>
+              <p><strong>Duration:</strong> {selectedTask.duration} days</p>
+              <p><strong>Priority:</strong> {selectedTask.priority}</p>
+              <p><strong>Status:</strong> {selectedTask.taskStatus}</p>
+              <p><strong>Assigned On:</strong> {new Date(selectedTask.createdAt).toLocaleString()}</p>
+            </Card>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowTaskModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

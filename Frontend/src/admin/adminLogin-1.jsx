@@ -2,15 +2,15 @@ import { useState } from "react";
 import BackendURL from "../config/BackendUrl";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-// import "./AdminLogin1.css"; // 👈 Add CSS file
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const AdminLogin1 = () => {
   const navigate = useNavigate();
   const [myData, setMydata] = useState({});
 
   const handleinput = (e) => {
-    let name = e.target.name;
-    let value = e.target.value;
+    const { name, value } = e.target;
     setMydata((values) => ({ ...values, [name]: value }));
   };
 
@@ -19,20 +19,24 @@ const AdminLogin1 = () => {
     try {
       const api = `${BackendURL}admin/login`;
       const res = await axios.post(api, myData);
-      console.log(res.data);
-      localStorage.setItem("token", res.data.admin.token);
-      navigate("/Dashboard-1");
+
+      // ✅ Corrected this line
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("name", res.data.name);
+
+      toast.success("✅ Login successful!");
+      setTimeout(() => navigate("/Dashboard-1"), 1000);
     } catch (err) {
-      alert("Invalid credentials! Please try again.");
+      toast.error("❌ Invalid credentials! Please try again.");
       console.error("Login failed:", err);
     }
   };
 
   return (
     <div className="admin-login">
+      <ToastContainer position="top-right" autoClose={2500} />
       <div className="admin-login-box">
         <h1>Admin Login</h1>
-
         <input
           type="text"
           name="email"
@@ -45,7 +49,6 @@ const AdminLogin1 = () => {
           placeholder="Enter password"
           onChange={handleinput}
         />
-
         <button onClick={handleSubmit}>Login</button>
       </div>
     </div>

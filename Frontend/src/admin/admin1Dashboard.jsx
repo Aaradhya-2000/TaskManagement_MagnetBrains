@@ -7,10 +7,11 @@ import "react-toastify/dist/ReactToastify.css";
 
 const Dashboard1 = () => {
   const navigate = useNavigate();
-  const name = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
+  const name = localStorage.getItem("name");
 
   const auth = () => {
-    if (!name) {
+    if (!token) {
       toast.error("🚫 Please login first!", {
         position: "top-center",
         autoClose: 2000,
